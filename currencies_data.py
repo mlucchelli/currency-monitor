@@ -39,7 +39,6 @@ class CurrenciesData:
             self.led_pin.value(1)
             print("url "+ self.host_url + "/latest")
             data = requests.get(self.host_url + "/latest")
-            print(data)
             prices = data.json()
            
             self.led_pin.value(0)
@@ -67,7 +66,6 @@ class CurrenciesData:
             print("url "+ self.host_url + "/historic?days={}".format(days))
             data = requests.get(self.host_url + "/historic?days={}".format(days))
             all_historic_values = data.json()
-            print(all_historic_values)
             data.close()
             self.cache["historic"] = all_historic_values
             self.led_pin.value(0)
