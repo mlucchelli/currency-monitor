@@ -8,7 +8,22 @@ class CurrenciesData:
         },
          "dolar_oficial":{
             "name": "USD"
-        }
+        },
+        "EUR":{
+            "name": "EUR"
+        },
+        "GBP":{
+            "name": "GBP"
+        },
+        "JPY":{
+            "name": "JPY"
+        },
+        "BTC":{
+            "name": "BTC"
+        },
+        "ETH":{
+            "name": "ETH"
+        },
     }
 
     cache = {
@@ -25,7 +40,7 @@ class CurrenciesData:
         }
     }
 
-    currencies_index = ["dolar_blue", "dolar_oficial"]
+    currencies_index = ["dolar_blue", "dolar_oficial", "EUR", "GBP", "JPY", "BTC", "ETH"]
 
     def __init__(self, led_pin, env = "prod"):
         self.led_pin = led_pin
@@ -48,30 +63,36 @@ class CurrenciesData:
         else:
             prices = self.cache["latest"]
             print("read latest from cache")
-        value = str(int(float(prices[currency]['value_avg'])))
-        output_text = self.currencies[currency]["name"] + " $" + value
+        value = float(prices[currency]['value_avg'])
+        if(value > 9999):
+            value = int(value)
+
+        output_text = self.currencies[currency]["name"] + " $" + str(value)
         
         return output_text
 
     def get_historic_value_buy(self, data, currency):
         values_for_currency = data[currency]
         values_for_currency.sort(key=lambda x: x["date"])
-        buy_values = [int(item["value_buy"]) for item in values_for_currency]
+        buy_values = [float(item["value_buy"]) for item in values_for_currency]
         return buy_values
 
     def get_history(self, days, currency, cached = False):
         all_historic_values = ""
+        values = ""
         if(not cached or self.cache["historic"] == ""):
             self.led_pin.value(1)
-            print("url "+ self.host_url + "/historic?days={}".format(days))
-            data = requests.get(self.host_url + "/historic?days={}".format(days))
+            print("url "+ self.host_url + "/historic/{}".format(days))
+            data = requests.get(self.host_url + "/historic/{}".format(days))
             all_historic_values = data.json()
+            #values = self.get_historic_value_buy(all_historic_values, currency)
             data.close()
             self.cache["historic"] = all_historic_values
             self.led_pin.value(0)
             print("read historic from network")
         else:
             all_historic_values = self.cache["historic"]
+            #values = self.get_historic_value_buy(all_historic_values, currency)
             print("read historic from cache")
 
         values = self.get_historic_value_buy(all_historic_values, currency)
