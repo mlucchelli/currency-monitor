@@ -9,7 +9,7 @@ from currencies_data import CurrenciesData
 from graph_drawer import GraphDrawer
 from network_manager import NetworkManager
 from anim.tv_animation import TVAnimation
-#from anim.particles_animation import ParticlesAnimation
+from anim.progress_bar import ProgressBar
 
 # end of import
 env = "prod"
@@ -34,8 +34,9 @@ tv_animation.run_animation()
 #particles_animation = ParticlesAnimation(display_manager.display)
 #particles_animation.run_animation()
 
+progress_bar = ProgressBar(display_manager.display)
 
-graph_drawer = GraphDrawer(display_manager.display, 150, 10)
+graph_drawer = GraphDrawer(display_manager.display, 170, 10)
 
 currencies_data = CurrenciesData(led_pin, env)
 
@@ -57,11 +58,19 @@ def map_value(value, in_min, in_max, out_min, out_max):
     return (value - in_min) * (out_max - out_min) // (in_max - in_min) + out_min
 
 def update_screen_data(cached = False):
-    display_manager.display.clear()
+    progress_bar.update(10)
+    progress_bar.draw()
+
     output_text = currencies_data.get_latest_value(current_currency, cached)
-    display_manager.print_display(output_text, 10, 180, 230, 5, 255, "", 255)
+    progress_bar.update(90)
+    progress_bar.draw()
+    
     values = currencies_data.get_history(90, current_currency, cached)
+    display_manager.display.clear()
+    display_manager.print_display(output_text, 10, 195, 230, 4, 255, "", 255)
     graph_drawer.draw_evolution_graph(values)
+    progress_bar.update(0)
+    progress_bar.draw()
 
 def update_currency_input():
     global current_currency_index, current_currency
@@ -78,6 +87,10 @@ def update_currency_input():
         print("update screen from cache")
         update_screen_data(True)
         #utime.sleep(1)
+
+display_manager.display.clear()
+display_manager.print_display('Fetching data', 10, 10, 10, 5, 255, "", 255)
+display_manager.display.update()
 
 while True:
     try:
