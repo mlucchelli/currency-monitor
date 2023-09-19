@@ -12,31 +12,44 @@ class CurrenciesData:
     }
 
     cache = {
-        "current": "",
+        "latest": "",
         "historic": "",
+    }
+
+    env_vars = {
+        "local":{
+            "host_url": "http://localhost:3000",
+        },
+         "prod":{
+            "host_url": "https://currency-monitor-api.onrender.com"
+        }
     }
 
     currencies_index = ["dolar_blue", "dolar_oficial"]
 
-    def __init__(self, led_pin):
+    def __init__(self, led_pin, env = "prod"):
         self.led_pin = led_pin
+        self.env = env
+        self.host_url = self.env_vars[env]["host_url"]
 
 
-    def get_current_value(self, currency, cached = False):
+    def get_latest_value(self, currency, cached = False):
         prices = ""
-        if(not cached or self.cache["current"] == ""):
+        if(not cached or self.cache["latest"] == ""):
             self.led_pin.value(1)
-            #data = requests.get("https://api.bluelytics.com.ar/v2/latest")
-            data = requests.get("https://api.npoint.io/3ac4dc2da6f4c1218f64")
+            print("url "+ self.host_url + "/latest")
+            data = requests.get(self.host_url + "/latest")
+            print(data)
             prices = data.json()
+           
             self.led_pin.value(0)
-            self.cache["current"] = prices
+            self.cache["latest"] = prices
             data.close()
-            print("read current from network")
+            print("read latest from network")
         else:
-            prices = self.cache["current"]
-            print("read current from cache")
-        value = str(prices[currency]['value_buy'])
+            prices = self.cache["latest"]
+            print("read latest from cache")
+        value = str(int(float(prices[currency]['value_avg'])))
         output_text = self.currencies[currency]["name"] + " $" + value
         
         return output_text
@@ -51,9 +64,10 @@ class CurrenciesData:
         all_historic_values = ""
         if(not cached or self.cache["historic"] == ""):
             self.led_pin.value(1)
-            #data = requests.get("https://api.bluelytics.com.ar/v2/evolution.json?days={}".format(days))
-            data = requests.get("https://api.npoint.io/cd424be197aed8ba4eb4")
+            print("url "+ self.host_url + "/historic?days={}".format(days))
+            data = requests.get(self.host_url + "/historic?days={}".format(days))
             all_historic_values = data.json()
+            print(all_historic_values)
             data.close()
             self.cache["historic"] = all_historic_values
             self.led_pin.value(0)
