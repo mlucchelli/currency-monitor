@@ -31,5 +31,5 @@ class GraphDrawer:
             if prev_x is not None:
                 self.display.line(prev_x, prev_y, x, y)
 
-            prev_x, prev_y = x, y   
+            prev_x, prev_y = x, y
         self.display.set_pen(0)

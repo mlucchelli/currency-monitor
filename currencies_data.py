@@ -1,4 +1,7 @@
-import urequests as requests
+import gc
+import time
+import urllib.urequest as requests
+import ujson
 from machine import Pin
 
 class CurrenciesData:
@@ -52,14 +55,18 @@ class CurrenciesData:
         prices = ""
         if(not cached or self.cache["latest"] == ""):
             self.led_pin.value(1)
-            print("url "+ self.host_url + "/latest")
-            data = requests.get(self.host_url + "/latest")
-            prices = data.json()
-           
-            self.led_pin.value(0)
+            data = bytearray(2048)
+            print("url " + self.host_url + "/latest")
+            r = requests.urlopen(self.host_url + "/latest")
+            r.readinto(data)
+            prices = ujson.loads(data)
+            #print(jsonData)
+            r.close()
+            del r
+            del data
             self.cache["latest"] = prices
-            data.close()
             print("read latest from network")
+            self.led_pin.value(0)
         else:
             prices = self.cache["latest"]
             print("read latest from cache")
@@ -68,7 +75,8 @@ class CurrenciesData:
             value = int(value)
 
         output_text = self.currencies[currency]["name"] + " $" + str(value)
-        
+        del prices
+        gc.collect()
         return output_text
 
     def get_historic_value_buy(self, data, currency):
@@ -82,11 +90,15 @@ class CurrenciesData:
         values = ""
         if(not cached or self.cache["historic"] == ""):
             self.led_pin.value(1)
+            data = bytearray(13000)
             print("url "+ self.host_url + "/historic/{}".format(days))
-            data = requests.get(self.host_url + "/historic/{}".format(days))
-            all_historic_values = data.json()
+            r = requests.urlopen(self.host_url + "/historic/{}".format(days))
+            r.readinto(data)
+            all_historic_values = ujson.loads(data)
             #values = self.get_historic_value_buy(all_historic_values, currency)
-            data.close()
+            r.close()
+            del r
+            del data
             self.cache["historic"] = all_historic_values
             self.led_pin.value(0)
             print("read historic from network")
@@ -94,7 +106,8 @@ class CurrenciesData:
             all_historic_values = self.cache["historic"]
             #values = self.get_historic_value_buy(all_historic_values, currency)
             print("read historic from cache")
-
         values = self.get_historic_value_buy(all_historic_values, currency)
+        del all_historic_values
+        gc.collect()
         return values
 
