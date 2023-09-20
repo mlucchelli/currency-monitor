@@ -1,7 +1,6 @@
 import utime
 import time
 import network
-import urequests as requests
 import machine
 from machine import Pin
 from display_manager import DisplayManager
@@ -10,15 +9,16 @@ from graph_drawer import GraphDrawer
 from network_manager import NetworkManager
 from anim.tv_animation import TVAnimation
 from anim.progress_bar import ProgressBar
+import gc
 
 # end of import
 env = "prod"
-history_retention = 45
-potentiometer_min = 1000
-potentiometer_max = 65000
+history_retention = 30
+potentiometer_min = 1600
+potentiometer_max = 64367
 output_min = 0
 output_max = 90
-desired_values = 100
+desired_values = 900
 ssid = '***REMOVED***'
 password = '***REMOVED***'
 interval_minutes = 10
@@ -43,8 +43,8 @@ current_currency = currencies_data.currencies_index[current_currency_index]
 
 
 def map_value(value, in_min, in_max, out_min, out_max):
-    scaled_value = value * 10
-    mapped_value = (scaled_value - in_min * 10) * (out_max - out_min) // ((in_max - in_min) * 10) + out_min
+    scaled_value = value * 100
+    mapped_value = (scaled_value - in_min * 100) * (out_max - out_min) // ((in_max - in_min) * 1000) + out_min
     return mapped_value
 
 def update_screen_data(cached = False):
@@ -90,6 +90,16 @@ display_manager.print_display('Fetching data', 10, 10, 10, 5, 255, "", 255)
 display_manager.display.update()
 
 while True:
+    # elapsed_minutes = (utime.ticks_ms() - last_action_time) / 60000
+    # if elapsed_minutes >= interval_minutes:
+    #     update_screen_data(False)
+    #     gc.collect()
+    #     last_action_time = utime.ticks_ms()
+    # else:
+    #     update_currency_input()
+    # gc.collect()
+    # free_memory = gc.mem_free()
+    # print("Memoria libre:", free_memory, "bytes")
     try:
         elapsed_minutes = (utime.ticks_ms() - last_action_time) / 60000
         if elapsed_minutes >= interval_minutes:
@@ -97,6 +107,10 @@ while True:
             last_action_time = utime.ticks_ms()
         else:
             update_currency_input()
+
+        
+        # free_memory = gc.mem_free()
+        # print("Free memmory:", free_memory, "bytes")
         
 
     except Exception as e:
@@ -109,6 +123,7 @@ while True:
                 print('connected')
             else:
                 print('connection failed: ' + e)
+    gc.collect()
     display_manager.display.update()
     #utime.sleep(1) 
 
@@ -117,8 +132,9 @@ while True:
 #current_date = "{:04d}-{:02d}-{:02d}".format(current_time[0], current_time[1], current_time[2])
 
 #print("time")
-#print(current_date)
+                                                                                                                                                                                                                                    #print(current_date)
+                                                                                                                                                                
 
 
 
-
+                                                                                                                                    
