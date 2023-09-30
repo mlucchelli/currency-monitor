@@ -4,10 +4,12 @@ import jpegdec
 class DisplayManager:
     def __init__(self, pen_color):
         self.display = PicoGraphics(display=DISPLAY_LCD_240X240, pen_type=PEN_RGB332)
-        self.display.set_backlight(1.0)
+        self.display.set_backlight(0.9)
         self.display.set_font("bitmap8")
         self.jpeg_decoder = jpegdec.JPEG(self.display)
         self.pen_color = pen_color
+        self.max_lines = 10
+        self.lines = []
 
     def print_image(self, filename):
         self.jpeg_decoder.open_file(filename)
@@ -20,3 +22,18 @@ class DisplayManager:
 
     def set_pen(self, color):
        self.display.set_pen(color)
+
+    def log(self, text):
+        self.lines.append(text)
+
+        if len(self.lines) > self.max_lines:
+            self.lines.pop(0)
+
+        self.display.clear()
+
+        y = 0
+        for line in self.lines:
+            self.display.text(str(line), 0, y, scale=2)
+            y += 16
+
+        self.display.update()

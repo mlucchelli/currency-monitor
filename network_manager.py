@@ -15,16 +15,15 @@ class NetworkManager:
         wlan.active(True)
         wlan.connect(self.ssid, self.password)
 
-        max_wait = 20
+        max_wait = 60
         while max_wait > 0:
             if wlan.status() < 0 or wlan.status() >= 3:
                 break
             max_wait -= 1
-            print('Waiting for connection...')
+            print('Connecting')
             self.display_manager.display.clear()
-            self.display_manager.print_display('Waiting for connection ({})'.format(max_wait), 10, 10, 10, 4, 255, "", 255)
-            self.display_manager.display.update()
-            utime.sleep(1)
+            self.display_manager.print_display('Connecting ({})'.format(max_wait), 10, 10, 10, 4, 255, "", 255)
+            utime.sleep(0.1)
 
         if wlan.status() != 3:
             raise RuntimeError('Network Connection has failed')
@@ -32,4 +31,8 @@ class NetworkManager:
             print('Connected')
             self.display_manager.display.clear()
             self.display_manager.print_display('Connected!', 10, 10, 10, 5, 255, "", 255)
-            self.display_manager.display.update()
+
+    def connection_enabled(self):
+        return self.wlan.status() < 0 or self.wlan.status() >= 3
+    
+    
