@@ -1,140 +1,82 @@
 import utime
-import time
-import network
 import machine
 from machine import Pin
-from display_manager import DisplayManager
+from display_manager_320 import DisplayManager320
 from currencies_data import CurrenciesData
-from graph_drawer import GraphDrawer
 from network_manager import NetworkManager
 from anim.tv_animation import TVAnimation
+from anim.tv_animation_320 import TVAnimation320
 from anim.progress_bar import ProgressBar
+from anim.progress_bar_320 import ProgressBar320
+from potentiometer_controller import PotentiometerController
+from currency_monitor_mode import CurrencyMonitorMode
 import gc
 
 # end of import
 env = "prod"
 history_retention = 30
-potentiometer_min = 1600
-potentiometer_max = 64367
+potentiometer_min = 1500
+potentiometer_max = 63000
 output_min = 0
 output_max = 90
 desired_values = 900
 ssid = '***REMOVED***'
 password = '***REMOVED***'
-interval_minutes = 10
-last_action_time = utime.ticks_ms() - (interval_minutes * 60000)
-led_pin = Pin(15, Pin.OUT)
+led_pin = Pin(16, Pin.OUT)
 potentiometer_pin = machine.ADC(machine.Pin(28))
-
-display_manager = DisplayManager(255)
-
-tv_animation = TVAnimation(display_manager.display)
+beta = True
+display_manager = None
+tv_animation = None
+progress_bar = None
+display_manager = DisplayManager320()
+tv_animation = TVAnimation320(display_manager.display)
 tv_animation.run_animation()
+display_manager.load_fonts()
+display_manager.clear()
+display_manager.print_display('Init', 10, 10, 10, 5, 255, "", 255)
+progress_bar = ProgressBar320(display_manager.display, display_manager.white)
 network_manager = NetworkManager(ssid,password, display_manager)
-
-graph_drawer = GraphDrawer(display_manager.display, 170, 10)
-progress_bar = ProgressBar(display_manager.display)
-
-currencies_data = CurrenciesData(led_pin, env)
-
-current_currency_index = 0
-current_currency = currencies_data.currencies_index[current_currency_index]
+currencies_data = CurrenciesData(led_pin, history_retention, env)
+PINS_BREAKOUT_GARDEN = {"sda": 18, "scl": 19}
+pot_control = PotentiometerController(PINS_BREAKOUT_GARDEN)
+currency_monitor_mode = CurrencyMonitorMode(display_manager, progress_bar, currencies_data)
 # end of variable init
 
-
-def map_value(value, in_min, in_max, out_min, out_max):
-    scaled_value = value * 100
-    mapped_value = (scaled_value - in_min * 100) * (out_max - out_min) // ((in_max - in_min) * 1000) + out_min
-    return mapped_value
-
-def update_screen_data(cached = False):
-    progress_bar.update(10)
-    progress_bar.draw()
-
-    output_text = currencies_data.get_latest_value(current_currency, cached)
-    progress_bar.update(90)
-    progress_bar.draw()
-
-    values = currencies_data.get_history(history_retention, current_currency, cached)
-
-    display_manager.display.clear()
-    display_manager.print_display(output_text, 10, 195, 230, 4, 255, "", 255)
-    graph_drawer.draw_evolution_graph(values)
+def draw():
+    currency_monitor_mode.draw()
  
+def update():
+    currency_monitor_mode.update(pot_control)
+    
 
-def update_currency_input():
-    global current_currency_index, current_currency
-    potentiometer_value = potentiometer_pin.read_u16()
-    mapped_value = map_value(potentiometer_value, potentiometer_min, potentiometer_max, output_min, output_max)
-    if(mapped_value > 6):
-            mapped_value = 6
-
-    if(current_currency_index != mapped_value):
-        current_currency_index = mapped_value
-        current_currency = currencies_data.currencies_index[current_currency_index]
-        print(current_currency)
-        print("update screen from cache")
-        update_screen_data(True)
-        #utime.sleep(1)
-# end of fucntions
+def init():
+    led_pin.value(0)
+    network_manager.connect_wifi()
+    utime.sleep(0.1)
+    currency_monitor_mode.init()
 
 #
 # Main
 #
-display_manager.print_display('Init', 10, 10, 10, 5, 255, "", 255)
-led_pin.value(0)
-network_manager.connect_wifi()
+def main():
+    while True:
+        # update()
+        # draw()
+        try:
+            update()
+            draw()
+            # free_memory = gc.mem_free()
+            # print("Free memmory:", free_memory, "bytes")
+        except Exception as e:
+            print(e)
+            print("Error: {}".format(e))
+            if network_manager.connection_enabled is not True:
+                print("trying to reconnect...")
+                network_manager.connect_wifi()
+                if network_manager.wlan.status() == 3:
+                    print('connected')
+                else:
+                    print('connection failed: ' + e)
 
-display_manager.display.clear()
-display_manager.print_display('Fetching data', 10, 10, 10, 5, 255, "", 255)
-display_manager.display.update()
-
-while True:
-    # elapsed_minutes = (utime.ticks_ms() - last_action_time) / 60000
-    # if elapsed_minutes >= interval_minutes:
-    #     update_screen_data(False)
-    #     gc.collect()
-    #     last_action_time = utime.ticks_ms()
-    # else:
-    #     update_currency_input()
-    # gc.collect()
-    # free_memory = gc.mem_free()
-    # print("Memoria libre:", free_memory, "bytes")
-    try:
-        elapsed_minutes = (utime.ticks_ms() - last_action_time) / 60000
-        if elapsed_minutes >= interval_minutes:
-            update_screen_data(False)
-            last_action_time = utime.ticks_ms()
-        else:
-            update_currency_input()
-
-        
-        # free_memory = gc.mem_free()
-        # print("Free memmory:", free_memory, "bytes")
-        
-
-    except Exception as e:
-        print(e)
-        print("could not connect (status =" + str(network_manager.wlan.status()) + ")")
-        if network_manager.wlan.status() < 0 or network_manager.wlan.status() >= 3:
-            print("trying to reconnect...")
-            network_manager.connect_wifi()
-            if network_manager.wlan.status() == 3:
-                print('connected')
-            else:
-                print('connection failed: ' + e)
-    gc.collect()
-    display_manager.display.update()
-    #utime.sleep(1) 
-
-
-#current_time = time.localtime()
-#current_date = "{:04d}-{:02d}-{:02d}".format(current_time[0], current_time[1], current_time[2])
-
-#print("time")
-                                                                                                                                                                                                                                    #print(current_date)
-                                                                                                                                                                
-
-
-
-                                                                                                                                    
+init()
+main()     

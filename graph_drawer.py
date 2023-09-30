@@ -4,7 +4,8 @@ class GraphDrawer:
         self.height = height
         self.offset = offset
 
-    def draw_evolution_graph(self, values):
+    def draw_evolution_graph(self, values, show_fluctuation=False):
+        print(values)
         self.display.set_pen(255)
         
         WIDTH, _ = self.display.get_bounds()
