@@ -16,7 +16,7 @@ class CurrenciesData:
             "host_url": "http://localhost:3000",
         },
          "prod":{
-            "host_url": "https://currency-monitor-api.onrender.com"
+            "host_url": "https://currency-monitor-api-eu.onrender.com"
         }
     }
 
@@ -29,14 +29,13 @@ class CurrenciesData:
 
 
     def get_latest_values(self):
-        self.led_pin.value(1)
+        self.led_pin.on()
         data = bytearray(2048)
         print("url " + self.host_url + "/latest")
         r = requests.urlopen(self.host_url + "/latest")
         r.readinto(data)
         self.cache["latest"] = ujson.loads(data)
-        print(self.cache["latest"] )
-        #print(jsonData)
+        
         r.close()
         del r
         del data
@@ -46,7 +45,7 @@ class CurrenciesData:
         for currency in self.cache["latest"]:
             self.currencies_index.append(currency)
 
-        self.led_pin.value(0)
+        self.led_pin.off()
         return self.cache["latest"]
     
     def get_latest_value(self, currency, cached = False):
@@ -72,7 +71,7 @@ class CurrenciesData:
         return buy_values
 
     def get_all_history(self, days):
-        self.led_pin.value(1)
+        self.led_pin.on()
         data = bytearray(13000)
         print("url "+ self.host_url + "/historic/{}".format(days))
         r = requests.urlopen(self.host_url + "/historic/{}".format(days))
@@ -83,7 +82,7 @@ class CurrenciesData:
         del r
         del data
 
-        self.led_pin.value(0)
+        self.led_pin.off()
         print("read historic from network")
         return self.cache["historic"] 
 
