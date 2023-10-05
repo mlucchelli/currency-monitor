@@ -1,4 +1,4 @@
-from ili9341 import color565
+from drivers.ili9341 import color565
 
 class GraphDrawer320:
     def __init__(self, display, width, height, offset, color):

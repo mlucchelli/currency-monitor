@@ -1,7 +1,4 @@
-from ili9341 import color565
-from machine import SPI, Pin
-import time
-
+from drivers.ili9341 import color565
 class TVAnimation320:
     def __init__(self, display):
         self.display = display

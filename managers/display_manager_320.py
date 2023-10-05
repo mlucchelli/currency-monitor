@@ -1,6 +1,6 @@
-from ili9341 import Display, color565
+from drivers.ili9341 import Display, color565
 from machine import Pin, SPI
-from xglcd_font import XglcdFont
+from drivers.xglcd_font import XglcdFont
 
 class DisplayManager320:
     def __init__(self):
@@ -16,16 +16,12 @@ class DisplayManager320:
         self.green = color565(0, 255, 0)
         self.amber = color565(255, 194, 0)
         self.orange = color565(255, 87, 51)
-        self.font_unispace_12x24 = XglcdFont('fonts/Unispace12x24.c', 12, 24)
+        
        
     
     def load_fonts(self):
-        #self.font_scpro_31x55= XglcdFont('fonts/SCProSB31x55.h', 31, 55)
-        #self.arial_32x34 = XglcdFont('fonts/ArialR32x34.h', 32, 34)
+        self.font_unispace_12x24 = XglcdFont('fonts/Unispace12x24.c', 12, 24)
         self.neu_42x35 = XglcdFont('fonts/Neu42x35.h', 42, 35)
-        #self.times_39x37 = XglcdFont('fonts/TimesNR39x37.h', 39, 37)
-        #self.unispace_12x24 = XglcdFont('fonts/Unispace12x24.c', 12, 24)
-        #self.font_scpro_31x55 = XglcdFont('fonts/SCProSB31x55.h', 31, 55)
     
     def print_display(self, output_text, x, y, wordwrap, scale, font_color, font, bg_color):
         self.display.draw_text(x, y, output_text, self.font_unispace_12x24, self.white)

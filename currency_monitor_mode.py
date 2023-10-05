@@ -51,9 +51,7 @@ class CurrencyMonitorMode:
 
     def update(self, pot_control):
         potentiometer_value = pot_control.read(len(self.currencies_data.currencies_index))
-        print("read")
-        print(potentiometer_value)
-        print(self.current_currency_index)
+
         if(self.current_currency_index != potentiometer_value):
             self.current_currency_index = potentiometer_value
             self.current_currency = self.currencies_data.currencies_index[self.current_currency_index]
