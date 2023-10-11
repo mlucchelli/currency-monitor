@@ -11,7 +11,7 @@ class CurrencyMonitorMode:
         self.current_currency_index = -1
         self.current_currency = ""
         self.last_action_time = utime.ticks_ms()
-        self.interval_minutes = 10
+        self.interval_minutes = 1
 
     def draw_screen_original(self, cached = False):
         self.progress_bar.update(10)

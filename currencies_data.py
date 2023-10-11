@@ -56,7 +56,7 @@ class CurrenciesData:
             prices = self.cache["latest"]
             print("read latest from cache")
         value = float(prices[currency]['value_avg'])
-        if(value > 9999):
+        if(value > 99):
             value = int(value)
 
         output_text = currency + " $" + str(value)
